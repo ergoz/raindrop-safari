@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en" id="ng-app" ng-app="avenger" ng-csp xmlns:ng="http://angularjs.org">
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" type="text/css" href="css/normalize.css">
+	<link rel="stylesheet" type="text/css" href="libs/ionicons.min.css">
+	<link rel="stylesheet" type="text/css" href="css/popup.css">
+	<script src="libs/angular.js"></script>
+	<script src="libs/angular-route.min.js"></script>
+	<script src="libs/angular-animate.min.js"></script>
+	<script src="libs/angular-cookies.min.js"></script>
+	<script src="libs/angular-contenteditable.js"></script>
+	<script src="libs/jquery.js"></script>
+	<script src="browsers/popup.js"></script>
+	<script src="popup.js"></script>
+</head>
+<body>
+<ng-view></ng-view>
+
+<script type='text/ng-template' id="add.html">
+<div class="padding" style="padding-bottom:0" ng-if="actions.notification">
+	<div id="notification">
+		<i class="ion-ios7-information-outline"></i>
+		<p>{{actions.notification}}</p>
+	</div>
+</div>
+
+<div id="stepsController" ng-switch="step" class="steps" ng-class="{'invers' : step==''}" ng-class="{'loading' : actions.loading}">
+
+
+
+
+
+
+<div class="stepPage" ng-switch-default>
+	<form ng-submit="actions.saveRaindrop()">
+	<div class="table addForm">
+		<div class="row">
+			<div class="cell padding addFormCover">
+				<!-- SLIDER -->
+				<div class="addCoverSlider">
+					<div class="coverSlide" ng-repeat="(k,cover) in form.media" style="background-image: url('{{cover.link|fixURL}}')" ng-if="form.cover==k && cover.link"></div>
+					<div class="coverSlide" ng-if="form.cover==form.media.length-1 && haveScreenshot==false">
+						<a href="" class="makeScreenButton" ng-click="actions.capturePage()">
+							<i class="ion-ios7-camera-outline"></i><br/>
+							<span>Нажмите, чтобы создать скриншот</span>
+						</a>
+					</div>
+				</div>
+			</div>
+			<div class="cell padding">
+				<!-- EDITOR -->
+				<h6>Заголовок и описание</h6>
+				<span class="placeholder" ng-if="form.title==''"><i class="ion-ios7-compose-outline"></i>Введите заголовок</span>
+				<h1 class="contenteditable" contenteditable="true" strip-br="true" select-non-editable="true" ng-model="form.title" autofocus="false"></h1>
+				<span class="placeholder min" ng-if="form.excerpt==''"><i class="ion-ios7-compose-outline"></i>Введите описание</span>
+				<p class="contenteditable" contenteditable="true" strip-br="true" select-non-editable="true" ng-model="form.excerpt"></p>
+			</div>
+		</div>
+		<div class="row">
+			<div class="cell padding addFormCoverOptions">
+				<!-- COVER SETTING -->
+				<h6>Обложка</h6>
+				<div class="pull-right" ng-if="form.coverEnabled && form.media.length>1">
+					<a href="" class="sliderNavigation" ng-click="actions.left()"><i class="ion-ios7-arrow-left"></i></a><a href="" class="sliderNavigation" ng-click="actions.right()"><i class="ion-ios7-arrow-right"></i></a>
+				</div>
+				<input type="checkbox" id="formCoverEnabler" ng-model="form.coverEnabled" /> <label for="formCoverEnabler">Вкл.</label>
+			</div>
+			<div class="cell padding addFormOptions">
+				<!-- SELECTION -->
+				<div class="table">
+					<div class="cell">
+						<h6><b>Сохранить в коллекцию</b></h6>
+						<div class="ajaxed" ng-click="actions.showStep('collection')">
+							<i class="ion-ios7-albums-outline"></i><a href="" ng-if="form.collectionId==undefined">Выбрать коллекцию</a><a href="" ng-if="form.collectionId>=0">{{actions.currentCollection()}}</a>
+						</div>
+					</div>
+					<div class="cell">
+						<h6>В виде</h6>
+						<div class="ajaxed" ng-click="actions.showStep('type')">
+							<i class="ion-ios7-bookmarks-outline" ng-if="form.type == 'link'"></i><i class="ion-ios7-copy-outline" ng-if="form.type == 'article'"></i><i class="ion-ios7-camera-outline" ng-if="form.type == 'image'"></i><i class="ion-ios7-browsers-outline" ng-if="form.type == 'video'"></i><a href="">{{form.type | humanize}}</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="actions padding">
+		<a href="http://raindrop.io/" class="pull-left btn btn-transparent" target="_blank" onClick="return openLink(this);"><i class="ion-ios7-cloud-outline"></i> Мой аккаунт</a>
+		<input id="saveRaindropButton" type="submit" class="pull-right btn btn-invert btn-green" ng-disabled="form.title=='' || form.collectionId==undefined || actions.loading" ng-class="{'loading' : actions.loading}" value="Добавить {{form.type|humanize:'d'}}" autofocus title="Укажите заголовок и коллекцию" ng-hide="editMode" />
+		<input id="saveRaindropButton" type="submit" class="pull-right btn btn-invert btn-green" ng-disabled="form.title=='' || form.collectionId==undefined || actions.loading" ng-class="{'loading' : actions.loading}" value="Сохранить изменения" autofocus title="Укажите заголовок и коллекцию" ng-show="editMode" />
+		<a href="" class="pull-right btn" ng-class="{'loading' : actions.loading}" style="margin-right:12px;" ng-if="editMode" ng-click="actions.deleteRaindrop()"><i class="ion-ios7-trash-outline"></i> Удалить</a>
+		<div class="clear"></div>
+	</div>
+	</form>
+</div>
+
+
+
+
+
+
+<!-- SELECT TYPE -->
+<div class="stepPage selectPage" ng-switch-when="type">
+	<div class="contentWrap">
+		<div class="table" style="height: {{actions.homeHeight}}px;">
+			<div class="row rowMin">
+				<h6 class="padding">Выберите подходящий тип страницы</h6>
+			</div>
+
+			<div class="row">
+				<div class="changeList">
+					<ul>
+						<li ng-class="{'active' : form.type == 'link'}"><a href="" class="padding" ng-click="form.type='link'; actions.showHome()"><i class="ion-ios7-bookmarks-outline"></i> {{'link_' | humanize}}</a></li>
+						<li ng-class="{'active' : form.type == 'article'}"><a href="" class="padding" ng-click="form.type='article'; actions.showHome()"><i class="ion-ios7-copy-outline"></i> {{'article_' | humanize}}</a></li>
+						<li ng-class="{'active' : form.type == 'image'}"><a href="" class="padding" ng-click="form.type='image'; actions.showHome()"><i class="ion-ios7-camera-outline"></i> {{'image_' | humanize}}</a></li>
+						<li ng-class="{'active' : form.type == 'video'}"><a href="" class="padding" ng-click="form.type='video'; actions.showHome()"><i class="ion-ios7-browsers-outline"></i> {{'video_' | humanize}}</a></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="actions padding">
+		<a href="" class="pull-left btn" ng-click="actions.showHome()"><i class="ion-ios7-arrow-thin-left"></i> Назад</a>
+		<div class="clear"></div>
+	</div>
+</div>
+
+
+
+
+
+<!-- SELECT COLLECTION -->
+<div class="stepPage selectPage" ng-switch-when="collection">
+	<div class="contentWrap">
+		<div class="table" style="height: {{actions.homeHeight}}px;">
+			<div class="row rowMin">
+				<h6 class="padding">
+					<span class="pull-right"><a href="" ng-click="actions.changeOrder('title')" ng-class="{'inactiveLink' : actions.orderBy=='title'}">По имени</a> &nbsp;/&nbsp; <a href="" ng-click="actions.changeOrder('lastUpdate')" ng-class="{'inactiveLink' : actions.orderBy=='lastUpdate'}">По дате</a></span>
+					Выберите коллекцию
+				</h6>
+			</div>
+			<div class="row rowMin">
+				<div class="padding-horizontal">
+					<form><div class="table" style="margin-bottom:12px;">
+						<div class="cell" style="width:100%"><input type="search" ng-model="actions.filter" ng-disabled="actions.loading" required placeholder="Найти или создать коллекцию..." /></div>
+						<div class="cell"><input ng-disabled="actions.loading" ng-class="{'loading' : actions.loading}" ng-click="actions.newCollection()" type="submit" class="btn" value="Создать коллекцию" style="margin-left:10px;" /></div>
+					</div></form>
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="changeList" style="height: {{actions.homeHeight-90}}px;">
+					<ul>
+						<li ng-repeat="item in collections | filter: actions.filter | orderBy:actions.orderBy:actions.orderDirection" ng-class="{'active' : item._id == form.collectionId}">
+							<a href="" class="padding" ng-click="form.collectionId=item._id; actions.showHome()"><i class="ion-ios7-locked-outline" ng-hide="item.public"></i><i class="ion-ios7-albums-outline" ng-show="item.public"></i> {{item.title}}</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="actions padding">
+		<a href="" class="pull-left btn" ng-click="actions.showHome()" ng-disabled="actions.loading"><i class="ion-ios7-arrow-thin-left"></i> Назад</a>
+		<div class="clear"></div>
+	</div>
+</div>
+
+
+
+
+
+</div>
+</script>
+
+
+
+
+<script type='text/ng-template' id="auth.html">
+	<div class="padding">
+		<div id="notification">
+			<i class="ion-ios7-information-outline"></i>
+			<p>Пожалуйста, войдите, чтобы начать сохранять закладки.</p>
+		</div>
+	</div>
+
+	<div class="actions padding">
+		<a href="http://raindrop.io/app/login" target="_blank" onClick="return openLink(this);" class="pull-right btn btn-invert btn-green"><i class="ion-ios7-person-outline"></i> Войти</a>
+		<div class="clear"></div>
+	</div>
+</script>
+</body>
+</html>

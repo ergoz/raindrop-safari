@@ -1,0 +1,21 @@
+<html>
+<head>
+<script type="text/javascript">
+safari.application.addEventListener("validate", function(e){
+	if (e.command === "buttonOblako"){
+		var url=safari.application.activeBrowserWindow.activeTab.url;
+		e.target.disabled = !((url.indexOf('://raindrop.io')<0)&&(url.indexOf('http')==0));
+	}
+}, false);
+
+safari.application.addEventListener("popover", function(event) {
+	if (event.target.identifier == "popupOblako"){
+		safari.application.activeBrowserWindow.activeTab.page.dispatchMessage('getHTML','please');
+	}
+}, true);
+</script>
+</head>
+<body>
+
+</body>
+</html>
